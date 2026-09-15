@@ -1,0 +1,10 @@
+<!-- Recreated geometric mark from Ronan's public Figma design. Original reference: https://www.figma.com/design/tZEG9H4ZRsP86KvhBjtd3X/Garantiy-Aid -->
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 96 96">
+  <rect width="96" height="96" rx="22" fill="#F8FAFC"/>
+  <g transform="translate(16 16)">
+    <path fill="#101F35" d="M32 3 56 12v18c0 15-11 25-24 31C19 55 8 45 8 30V12Z"/>
+    <circle cx="32" cy="22" r="7" fill="#1BBD91"/>
+    <path fill="#1BBD91" d="M22 37v-4c0-5 4-8 10-8s10 3 10 8v4Z"/>
+    <path fill="#1BBD91" d="m17 43 8-5h13c4 0 4 5 0 5h-7v3h12l7-4c4-2 6 2 3 5l-13 7H28l-11-5Z"/>
+  </g>
+</svg>

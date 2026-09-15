@@ -1,0 +1,214 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-15T06:02:04.660Z",
+  "title": "Design System: GarantiyAid",
+  "extensions": {
+    "colorMeta": {
+      "primary": {
+        "role": "primary",
+        "displayName": "Claim blue"
+      },
+      "onPrimary": {
+        "role": "neutral",
+        "displayName": "White on blue"
+      },
+      "primarySoft": {
+        "role": "primary",
+        "displayName": "Pale blue"
+      },
+      "navy": {
+        "role": "neutral",
+        "displayName": "Shield navy"
+      },
+      "green": {
+        "role": "secondary",
+        "displayName": "Verification green"
+      },
+      "greenSoft": {
+        "role": "secondary",
+        "displayName": "Pale verification green"
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Pale screen"
+      },
+      "card": {
+        "role": "neutral",
+        "displayName": "White container"
+      },
+      "text": {
+        "role": "neutral",
+        "displayName": "Dark reading text"
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Muted slate"
+      },
+      "outline": {
+        "role": "neutral",
+        "displayName": "Quiet outline"
+      },
+      "amber": {
+        "role": "tertiary",
+        "displayName": "Amber feedback ink"
+      },
+      "amberSoft": {
+        "role": "tertiary",
+        "displayName": "Pale amber feedback"
+      },
+      "error": {
+        "role": "tertiary",
+        "displayName": "Error feedback red"
+      },
+      "errorSoft": {
+        "role": "tertiary",
+        "displayName": "Pale error feedback"
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Queue and balance numerals; native number variant."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Entry and detail headings; native title variant."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Beneficiary name and sections; native heading variant."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Explanatory text."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Fields, actions, and important values."
+      },
+      "small": {
+        "displayName": "Small",
+        "purpose": "Supporting descriptions and notices."
+      },
+      "input": {
+        "displayName": "Input",
+        "purpose": "Editable text in the reusable field."
+      }
+    },
+    "shadows": [],
+    "motion": [],
+    "breakpoints": []
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Illustrative HTML/CSS translation of native Button primary; CSS focus and hover are panel-only.",
+      "html": "<button class=\"ds-button-primary\">Continue</button>",
+      "css": ".ds-button-primary{background:#155596;color:#FFFFFF;border:0;border-radius:14px;padding:12px 16px;min-height:48px;font-family:Inter,sans-serif;font-size:14px;line-height:20px;font-weight:600;cursor:pointer}.ds-button-primary:hover{opacity:.9}.ds-button-primary:active{opacity:.8}.ds-button-primary:focus-visible{outline:2px solid #155596;outline-offset:3px}.ds-button-primary:disabled{opacity:.5;cursor:default}"
+    },
+    {
+      "name": "Outline Button",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "Illustrative HTML/CSS translation of native Button outline; CSS focus and hover are panel-only.",
+      "html": "<button class=\"ds-button-outline\">Continue</button>",
+      "css": ".ds-button-outline{background:transparent;color:#155596;border:1px solid #155596;border-radius:14px;padding:12px 16px;min-height:48px;font-family:Inter,sans-serif;font-size:14px;line-height:20px;font-weight:600;cursor:pointer}.ds-button-outline:hover{opacity:.9}.ds-button-outline:active{opacity:.8}.ds-button-outline:focus-visible{outline:2px solid #155596;outline-offset:3px}.ds-button-outline:disabled{opacity:.5;cursor:default}"
+    },
+    {
+      "name": "Green Button",
+      "kind": "button",
+      "refersTo": "button-green",
+      "description": "Illustrative HTML/CSS translation of native Button green; CSS focus and hover are panel-only.",
+      "html": "<button class=\"ds-button-green\">Continue</button>",
+      "css": ".ds-button-green{background:#117D65;color:#FFFFFF;border:0;border-radius:14px;padding:12px 16px;min-height:48px;font-family:Inter,sans-serif;font-size:14px;line-height:20px;font-weight:600;cursor:pointer}.ds-button-green:hover{opacity:.9}.ds-button-green:active{opacity:.8}.ds-button-green:focus-visible{outline:2px solid #155596;outline-offset:3px}.ds-button-green:disabled{opacity:.5;cursor:default}"
+    },
+    {
+      "name": "White Button",
+      "kind": "button",
+      "refersTo": "button-white",
+      "description": "Illustrative HTML/CSS translation of native Button white; CSS focus and hover are panel-only.",
+      "html": "<button class=\"ds-button-white\">Continue</button>",
+      "css": ".ds-button-white{background:#FFFFFF;color:#155596;border:0;border-radius:14px;padding:12px 16px;min-height:48px;font-family:Inter,sans-serif;font-size:14px;line-height:20px;font-weight:600;cursor:pointer}.ds-button-white:hover{opacity:.9}.ds-button-white:active{opacity:.8}.ds-button-white:focus-visible{outline:2px solid #155596;outline-offset:3px}.ds-button-white:disabled{opacity:.5;cursor:default}"
+    },
+    {
+      "name": "Outlined Field",
+      "kind": "input",
+      "refersTo": "field",
+      "description": "Illustrative native Field translation with the implemented error border, accessible correction, and assertive error text.",
+      "html": "<label class=\"ds-field-label\" for=\"ds-name\">First name</label><input class=\"ds-field-input\" id=\"ds-name\" aria-invalid=\"true\" aria-describedby=\"ds-name-error\" value=\"123\" /><p class=\"ds-field-error\" id=\"ds-name-error\" role=\"alert\" aria-live=\"assertive\">Use letters and normal name punctuation only.</p>",
+      "css": ".ds-field-label{display:block;margin-bottom:8px;color:#172233;font-family:Inter,sans-serif;font-size:14px;line-height:20px;font-weight:600}.ds-field-input{width:100%;min-height:52px;border:1px solid #DDE3EA;border-radius:14px;background:#FFFFFF;padding:12px 16px;color:#172233;font-family:Inter,sans-serif;font-size:16px;font-weight:400}.ds-field-input::placeholder{color:#596575}.ds-field-input:hover{border-color:#596575}.ds-field-input:focus-visible{outline:2px solid #155596;outline-offset:2px}.ds-field-input[aria-invalid=\"true\"]{border-color:#B3313D}.ds-field-error{margin:8px 0 0;color:#B3313D;font-family:Inter,sans-serif;font-size:12px;line-height:18px}"
+    },
+    {
+      "name": "Personal Information Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Illustrative translation of the outlined native personal/address form card with its tighter local gap.",
+      "html": "<section class=\"ds-card\"><div class=\"ds-card-heading\"><span class=\"ds-card-section-icon\" aria-hidden=\"true\"></span><div><strong class=\"ds-card-title\">Personal information</strong><p class=\"ds-card-note\">All fields are required unless marked optional.</p></div></div><div class=\"ds-card-field\">First name</div><div class=\"ds-card-field\">Middle name (optional)</div></section>",
+      "css": ".ds-card{display:flex;flex-direction:column;gap:14px;background:#FFFFFF;border:1px solid #DDE3EA;border-radius:16px;padding:18px;color:#172233;font-family:Inter,sans-serif}.ds-card-heading{display:flex;align-items:center;gap:12px}.ds-card-section-icon{width:38px;height:38px;flex:0 0 38px;border-radius:19px;background:#EAF3FF}.ds-card-title{font-size:14px;line-height:20px;font-weight:600}.ds-card-note{margin:3px 0 0;color:#596575;font-size:12px;line-height:18px}.ds-card-field{min-height:52px;border:1px solid #DDE3EA;border-radius:14px;padding:14px 16px;color:#596575;font-size:14px}"
+    },
+    {
+      "name": "Bottom Navigation",
+      "kind": "nav",
+      "refersTo": "bottom-navigation",
+      "description": "Illustrative four-tab translation; static HTML labels and inline SVG represent Expo Tabs. Native safe-area padding and navigation require the app runtime.",
+      "html": "<nav class=\"ds-nav\" aria-label=\"App\"><button class=\"ds-nav-item\" aria-current=\"page\"><svg width=\"21\" height=\"21\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1Z\"/></svg><span>Home</span></button><button class=\"ds-nav-item\"><svg width=\"21\" height=\"21\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M20 8H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14v5M3 6v13a2 2 0 0 0 2 2h15V8h-5v7h5M17 11h.01\"/></svg><span>Wallet</span></button><button class=\"ds-nav-item\"><svg width=\"21\" height=\"21\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><path d=\"M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01\"/></svg><span>Help</span></button><button class=\"ds-nav-item\"><svg width=\"21\" height=\"21\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"8\" r=\"5\"/><path d=\"M3 21a9 9 0 0 1 18 0\"/></svg><span>Profile</span></button></nav>",
+      "css": ".ds-nav{display:flex;min-height:68px;padding:8px 0;background:#FFFFFF;border-top:1px solid #DDE3EA}.ds-nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:48px;border:0;background:transparent;color:#596575;font-family:Inter,sans-serif;font-size:11px;font-weight:500;cursor:pointer}.ds-nav-item[aria-current=\"page\"]{color:#155596}.ds-nav-item:hover{background:#EAF3FF}.ds-nav-item:active{opacity:.8}.ds-nav-item:focus-visible{outline:2px solid #155596;outline-offset:-2px}"
+    }
+  ],
+  "narrative": {
+    "northStar": "User-pinned GarantiyAid mobile reference",
+    "overview": "The visual authority is the user's [GarantiyAid Figma mobile design](https://www.figma.com/design/tZEG9H4ZRsP86KvhBjtd3X/Garantiy-Aid?node-id=0-1). The implemented interface uses pale screens, navy and dark text, rounded blue actions, green verification feedback, and compact outlined forms. This is a descriptive record of that existing direction, without a new identity or creative metaphor.\n\nThis record covers the React Native + Expo code under `mobile/`. The native theme and reusable components are the token sources; Home, Help, entry screens, and the Expo Tabs configuration supply component and layout evidence. The app entry now opens directly on the first account-creation step. Inter and the recreated shield are implementation approximations because precise Figma font metadata and original downloadable mark assets were unavailable.\n\nFrontmatter lengths use portable CSS `px` notation for the corresponding numeric React Native style values. Native geometry uses density-independent layout units (dp); text uses React Native `fontSize`, `lineHeight`, and `letterSpacing` values subject to native font scaling. These are not physical screen pixels or a promise of identical rendering across platforms. Sidecar HTML/CSS translates components for the design panel; it is illustrative and is not native runtime code. The account-creation source findings have a ship disposition after Unicode-aware validation, live-language boolean errors, a labeled radio group, and assertive field errors were verified. Browser and native-device visual approval for this change remain unavailable.",
+    "keyCharacteristics": [
+      "Pale neutral screens with white outlined containers.",
+      "Blue task actions and green verification feedback.",
+      "Compact Inter typography with prominent queue and balance numbers.",
+      "Rounded controls, a four-step account flow, and four bottom destinations.",
+      "Visible prototype disclosures beside simulated data and interactions."
+    ],
+    "rules": [
+      {
+        "name": "The Paired Feedback Rule",
+        "body": "Notice and badge states pair their tone's ink with its pale background and a readable text label.",
+        "section": "colors"
+      },
+      {
+        "name": "The Alias Weight Rule",
+        "body": "Use the exported Inter font aliases for native regular, medium, semibold, and bold text.",
+        "section": "typography"
+      },
+      {
+        "name": "The Phone Flow Rule",
+        "body": "Keep the native content in its safe-area, scrolling phone flow; the Figma device housing and annotations are not app chrome.",
+        "section": "layout"
+      },
+      {
+        "name": "The Tonal Container Rule",
+        "body": "Separate the observed containers with their background tones and thin borders; do not infer a shadow scale from the preview.",
+        "section": "elevation & depth"
+      },
+      {
+        "name": "The Live Error Rule",
+        "body": "Store field validity separately from translated copy, then expose the active-language correction through the control label or hint and an assertive alert.",
+        "section": "components"
+      }
+    ],
+    "dos": [
+      "**Do** preserve the user's blue/green Figma identity and recreate screen content inside the device frame.",
+      "**Do** use native theme tokens and exported Inter aliases for repeated controls and text roles.",
+      "**Do** keep state labels readable alongside their paired feedback colors.",
+      "**Do** preserve safe-area spacing, scrollable content, and the four implemented tab destinations.",
+      "**Do** keep prototype disclosures visible wherever the interface presents simulated claims, messages, or wallet data.",
+      "**Do** keep registration at four visible steps and group personal and address fields in the established outlined cards.",
+      "**Do** validate names and places with Unicode-aware letter rules and derive visible errors from boolean state so language changes update them."
+    ],
+    "donts": [
+      "**Don't** present the recreated shield or assumed Inter family as an exact original Figma asset match.",
+      "**Don't** treat web-only framing, synthesized tonal ramps, or panel CSS interaction states as native implementation tokens.",
+      "**Don't** promote the appointment caption treatment or compact staff label into a general heading style.",
+      "**Don't** describe the browser review disposition as native-device approval or backend readiness.",
+      "**Don't** communicate a radio or field error through border color alone; retain labels, checked state, hints, and assertive translated error text."
+    ]
+  }
+}
