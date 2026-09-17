@@ -19,6 +19,14 @@ export function formatTimeSlot(start: string, end: string) {
   return `${formatter.format(new Date(start))} - ${formatter.format(new Date(end))}`;
 }
 
+export function formatDateTime(value: string) {
+  return new Intl.DateTimeFormat('en-PH', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+    timeZone: manilaTimeZone,
+  }).format(new Date(value));
+}
+
 export function formatQueueNumber(queueNumber: number) {
   return `#${String(queueNumber).padStart(3, '0')}`;
 }

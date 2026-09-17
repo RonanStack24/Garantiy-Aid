@@ -2,7 +2,7 @@ import express, { type Request } from "express";
 import { config } from "./config.ts";
 import { prisma } from "./db.ts";
 import { ApiError } from "./errors.ts";
-import { createOtp, createSessionToken, hashSecret, secretMatches } from "./security.ts";
+import { createOtp, createQrToken, createSessionToken, hashSecret, secretMatches } from "./security.ts";
 import { parseOtpRequest, parseOtpVerification, parseRegistration } from "./validation.ts";
 
 const OTP_LIFETIME_MS = 5 * 60 * 1000;
@@ -99,6 +99,19 @@ async function requireBeneficiary(req: Request) {
     throw new ApiError(401, "SESSION_EXPIRED", "Your session has expired. Please sign in again.");
   }
   return { session, beneficiary: session.beneficiary };
+}
+
+function findNextSchedule(beneficiaryId: string) {
+  return prisma.schedule.findFirst({
+    where: {
+      beneficiaryId,
+      slotEnd: { gte: new Date() },
+      status: { in: ["scheduled", "rescheduled"] },
+      distribution: { status: { not: "cancelled" } },
+    },
+    include: { distribution: { include: { program: true } } },
+    orderBy: { slotStart: "asc" },
+  });
 }
 
 app.get("/", (_req, res) => {
@@ -222,16 +235,7 @@ app.get("/beneficiaries/me/overview", async (req, res) => {
       include: { program: true },
       orderBy: { enrollmentDate: "desc" },
     }),
-    prisma.schedule.findFirst({
-      where: {
-        beneficiaryId: beneficiary.beneficiaryId,
-        slotEnd: { gte: new Date() },
-        status: { in: ["scheduled", "rescheduled"] },
-        distribution: { status: { not: "cancelled" } },
-      },
-      include: { distribution: { include: { program: true } } },
-      orderBy: { slotStart: "asc" },
-    }),
+    findNextSchedule(beneficiary.beneficiaryId),
   ]);
 
   res.json({
@@ -268,6 +272,58 @@ app.get("/beneficiaries/me/overview", async (req, res) => {
             },
           }
         : null,
+    },
+  });
+});
+
+app.post("/beneficiaries/me/claim-pass", async (req, res) => {
+  const { beneficiary } = await requireBeneficiary(req);
+  const schedule = await findNextSchedule(beneficiary.beneficiaryId);
+  if (!schedule) {
+    throw new ApiError(404, "CLAIM_PASS_UNAVAILABLE", "No upcoming distribution is assigned to your account.");
+  }
+
+  const claimCode = createQrToken();
+  const [, pass] = await prisma.$transaction([
+    prisma.qrToken.updateMany({
+      where: {
+        beneficiaryId: beneficiary.beneficiaryId,
+        distributionId: schedule.distributionId,
+        qrStatus: "active",
+      },
+      data: { qrStatus: "revoked" },
+    }),
+    prisma.qrToken.create({
+      data: {
+        beneficiaryId: beneficiary.beneficiaryId,
+        distributionId: schedule.distributionId,
+        tokenHash: hashSecret(claimCode, "qr", config.authPepper),
+        expiresAt: schedule.slotEnd,
+      },
+    }),
+  ]);
+
+  res.status(201).json({
+    data: {
+      id: pass.qrTokenId,
+      claimCode,
+      status: pass.qrStatus,
+      issuedAt: pass.createdAt.toISOString(),
+      expiresAt: pass.expiresAt.toISOString(),
+      schedule: {
+        id: schedule.scheduleId,
+        distributionId: schedule.distributionId,
+        date: schedule.distribution.distributionDate.toISOString().slice(0, 10),
+        slotStart: schedule.slotStart.toISOString(),
+        slotEnd: schedule.slotEnd.toISOString(),
+        queueNumber: schedule.queueNumber,
+        location: schedule.distribution.location,
+        program: {
+          id: schedule.distribution.program.programId,
+          code: schedule.distribution.program.programCode,
+          name: schedule.distribution.program.programName,
+        },
+      },
     },
   });
 });

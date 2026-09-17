@@ -14,5 +14,6 @@ test("secret hashes are purpose-bound and compare safely", () => {
   const hash = hashSecret("123456", "otp", pepper);
   assert.equal(secretMatches("123456", hash, "otp", pepper), true);
   assert.equal(secretMatches("123456", hash, "session", pepper), false);
+  assert.equal(secretMatches("123456", hash, "qr", pepper), false);
   assert.equal(secretMatches("654321", hash, "otp", pepper), false);
 });

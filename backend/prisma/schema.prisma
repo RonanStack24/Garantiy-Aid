@@ -44,6 +44,7 @@ model Beneficiary {
   authSessions  AuthSession[]
   enrollments   Enrollment[]
   schedules     Schedule[]
+  qrTokens      QrToken[]
 
   @@index([barangayId])
   @@map("beneficiaries")
@@ -89,6 +90,7 @@ model Distribution {
   createdAt         DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
   program           Program    @relation(fields: [programId], references: [programId])
   schedules         Schedule[]
+  qrTokens          QrToken[]
 
   @@unique([programId, distributionDate, location])
   @@index([distributionDate, status])
@@ -111,6 +113,21 @@ model Schedule {
   @@unique([distributionId, queueNumber])
   @@index([beneficiaryId, slotStart])
   @@map("schedules")
+}
+
+model QrToken {
+  qrTokenId     String       @id @default(uuid()) @map("qr_token_id") @db.Uuid
+  beneficiaryId String       @map("beneficiary_id") @db.Uuid
+  distributionId String      @map("distribution_id") @db.Uuid
+  tokenHash     String       @unique @map("token_hash") @db.Char(64)
+  qrStatus      String       @default("active") @map("qr_status") @db.VarChar(32)
+  expiresAt     DateTime     @map("expires_at") @db.Timestamptz(6)
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  beneficiary   Beneficiary  @relation(fields: [beneficiaryId], references: [beneficiaryId], onDelete: Cascade)
+  distribution  Distribution @relation(fields: [distributionId], references: [distributionId], onDelete: Cascade)
+
+  @@index([beneficiaryId, distributionId, qrStatus])
+  @@map("qr_tokens")
 }
 
 model OtpChallenge {

@@ -13,6 +13,7 @@ These are the mobile frontend's requirements, derived from the manuscript and la
 | `POST /auth/logout` | Revokes the current bearer session. |
 | `GET /beneficiaries/me` | Returns the authenticated beneficiary profile. |
 | `GET /beneficiaries/me/overview` | Returns program enrollments and the next assigned distribution schedule. |
+| `POST /beneficiaries/me/claim-pass` | Issues a hashed, expiring QR pass for the authenticated beneficiary's next distribution. |
 
 | Capability                      | Required behavior and fields                                                                                                                                                                                                                    |
 | ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -20,7 +21,7 @@ These are the mobile frontend's requirements, derived from the manuscript and la
 | Beneficiary profile             | Beneficiary ID, name, contact number, barangay, verification status, permitted edits, and enrolled programs.                                                                                                                                    |
 | Program enrollment              | **Implemented for program, enrollment date, grant amount, and status.** Required documents, validation results, and assigned staff contact remain.                                                                                              |
 | Schedules                       | **Implemented for the next assigned schedule:** distribution and schedule IDs, program, date, start/end, queue number, location, and status. Change notifications remain.                                                                       |
-| QR claim pass                   | Server-issued opaque token, distribution scope, expiry, and used/revoked status. Generate and validate tokens on the server. Never trust the mobile demo QR.                                                                                    |
+| QR claim pass                   | **Mobile issuance implemented:** server-issued opaque token, distribution scope, expiry, and replacement revocation. Staff-side validation and used status remain.                                                                            |
 | Claims                          | Authoritative validation, authorized staff action, claim status, amount, program, date, receipt reference, and duplicate blocking across devices. The mobile client displays the result.                                                        |
 | Consent and biometrics          | Versioned privacy notice and consent, consent ID and timestamps, withdrawal, secure photo upload if allowed, face enrollment result, and server-side matching/liveness. The client captures a photo; it does not declare a real identity match. |
 | Wallet and transactions         | Simulated balance, currency, transaction amount/type/date/status/reference, and receipts. No real financial processing is in capstone scope.                                                                                                    |
@@ -29,4 +30,4 @@ These are the mobile frontend's requirements, derived from the manuscript and la
 
 The mobile app centralizes API calls with a timeout, loading/error states, server-issued codes, persistent sessions, and protected signed-in routes. Do not embed database, SMS, or biometric-service credentials in Expo public environment variables.
 
-Add offline schedule/pass caching only after agreeing token expiry and revocation behavior. The existing frontend makes no claim that a pass remains valid while offline.
+Add offline schedule/pass caching only after agreeing token expiry and revocation behavior. The current pass is held only while its screen is open and is reissued by the server when opened again.

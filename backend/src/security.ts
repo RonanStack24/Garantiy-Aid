@@ -17,14 +17,20 @@ export function createSessionToken(): string {
   return randomBytes(32).toString("base64url");
 }
 
-export function hashSecret(value: string, purpose: "otp" | "session", pepper: string): string {
+export function createQrToken(): string {
+  return `GAI1.${randomBytes(32).toString("base64url")}`;
+}
+
+type SecretPurpose = "otp" | "session" | "qr";
+
+export function hashSecret(value: string, purpose: SecretPurpose, pepper: string): string {
   return createHmac("sha256", pepper).update(`${purpose}:${value}`).digest("hex");
 }
 
 export function secretMatches(
   value: string,
   expectedHash: string,
-  purpose: "otp" | "session",
+  purpose: SecretPurpose,
   pepper: string,
 ): boolean {
   const actual = Buffer.from(hashSecret(value, purpose, pepper), "hex");

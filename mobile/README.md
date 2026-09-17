@@ -22,19 +22,19 @@ Skip optional face enrollment or choose demo capture. Camera access is requested
 
 - English/Bisaya four-step account creation backed by PostgreSQL, including active-barangay validation, generated OTP verification, phone login, complete saved beneficiary details, and server-side logout.
 - Optional biometric consent, front-camera photo capture, retake, demo enrollment success, and consent withdrawal.
-- Database-backed program enrollment, Home claiming schedule, schedule details, queue number, and empty/error/retry states. The QR pass, identity verification, and claim completion flows remain previews.
+- Database-backed program enrollment, Home claiming schedule, schedule details, queue number, and server-issued QR claim pass with empty/error/retry states. Identity verification and claim completion remain previews.
 - Simulated wallet, receipt modal, transaction history, and selected receipts. Preview claiming updates the simulated balance once per session.
 - Notifications with read state and detail views, profile editing, notification preference controls, enrollment progress, missing-document file selection, and recovery screens.
 - Sample assistant conversations for schedule, current demo claim status, documents, face scan failure, and enrollment; staff-support preview.
 - Schedule update, expired QR, and claim-review states.
 
-Registration, authentication, beneficiary profiles, program enrollments, and the next distribution schedule use the local backend database. Transaction, notification, biometric, QR, and claim records remain synthetic. Session tokens are encrypted with Expo SecureStore on Android and iOS, while the browser preview uses local storage. On startup the app validates the saved session through `/beneficiaries/me`; expired sessions return to Welcome and signed-out users cannot open the tab routes.
+Registration, authentication, beneficiary profiles, program enrollments, the next distribution schedule, and QR claim-pass issuance use the local backend database. Transaction, notification, biometric, and claim records remain synthetic. Session tokens are encrypted with Expo SecureStore on Android and iOS, while the browser preview uses local storage. On startup the app validates the saved session through `/beneficiaries/me`; expired sessions return to Welcome and signed-out users cannot open the tab routes.
 
 ## Figma reference
 
 [Garantiy-Aid design](https://www.figma.com/design/tZEG9H4ZRsP86KvhBjtd3X/Garantiy-Aid?node-id=0-1)
 
-The original canvas contains phone housing and flow annotations. The implementation recreates the actual app content inside those phones. It preserves the pale backgrounds, blue action buttons, green success states, compact forms, claiming card, and Home/Wallet/Help/Profile navigation. Touch targets and small text were enlarged for use on a real device. The supplied QR image was replaced with a scannable **invalid demo token**. Inter and a recreated shield icon approximate the anonymously viewable design; replace the mark with the original exported Figma asset for exact brand fidelity.
+The original canvas contains phone housing and flow annotations. The implementation recreates the actual app content inside those phones. It preserves the pale backgrounds, blue action buttons, green success states, compact forms, claiming card, and Home/Wallet/Help/Profile navigation. Touch targets and small text were enlarged for use on a real device. The QR screen renders the opaque value issued for the signed-in beneficiary and distribution. Inter and a recreated shield icon approximate the anonymously viewable design; replace the mark with the original exported Figma asset for exact brand fidelity.
 
 ## Project structure
 

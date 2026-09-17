@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Switch, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import * as DocumentPicker from 'expo-document-picker';
@@ -37,8 +37,14 @@ import {
 } from '../components';
 import { appointment as a, notices, peso, transactions, useDemo } from '../state';
 import { colors as c, fonts } from '../theme';
-import { getBarangays } from '../api';
-import { formatDate, formatQueueNumber, formatStatus, formatTimeSlot } from '../format';
+import { ApiRequestError, getBarangays, issueClaimPass, type ClaimPass as ClaimPassData } from '../api';
+import {
+  formatDate,
+  formatDateTime,
+  formatQueueNumber,
+  formatStatus,
+  formatTimeSlot,
+} from '../format';
 import { s as mainStyles } from './main';
 
 export function DetailScreen() {
@@ -213,12 +219,9 @@ function Schedule() {
           'Kini nga iskedyul gi-assign sa imong beneficiary account. Abot lamang sa imong oras.',
         )}
       </Notice>
-      <Notice tone="warning">
-        {t(
-          'A valid QR pass will appear here after the server issues one. Do not use the preview QR for claiming.',
-          'Makita dinhi ang balidong QR pass human kini i-issue sa server. Ayaw gamita ang preview QR sa claim.',
-        )}
-      </Notice>
+      <Button icon={QrCode} onPress={() => go('qr-pass')}>
+        {t('Open my QR claim pass', 'Ablihi akong QR claim pass')}
+      </Button>
       <Button variant="outline" onPress={() => void refreshOverview()}>
         {t('Refresh schedule', 'I-refresh ang iskedyul')}
       </Button>
@@ -227,49 +230,94 @@ function Schedule() {
 }
 
 function ClaimPass() {
-  const { claimCompleted, t } = useDemo();
+  const { accessToken, reset, t } = useDemo();
+  const [pass, setPass] = useState<ClaimPassData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<ApiRequestError | null>(null);
+  const requested = useRef(false);
+  const load = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      setPass(await issueClaimPass(accessToken));
+    } catch (caught) {
+      if (caught instanceof ApiRequestError && caught.status === 401) {
+        await reset();
+        router.replace('/');
+        return;
+      }
+      setError(
+        caught instanceof ApiRequestError
+          ? caught
+          : new ApiRequestError('REQUEST_FAILED', 'The claim pass could not be issued.'),
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+  useEffect(() => {
+    if (!accessToken || requested.current) return;
+    requested.current = true;
+    void load();
+  }, [accessToken]);
+  if (loading) {
+    return <Notice>{t('Issuing your secure QR pass…', 'Gina-issue ang imong secure QR pass…')}</Notice>;
+  }
+  if (error) {
+    const unavailable = error.code === 'CLAIM_PASS_UNAVAILABLE';
+    return (
+      <>
+        <Notice tone={unavailable ? 'warning' : 'error'}>
+          {unavailable
+            ? t(
+                'A QR pass is not available because you have no upcoming distribution schedule.',
+                'Walay QR pass kay wala pay umaabot nga distribution schedule.',
+              )
+            : t('Your QR pass could not be issued. Try again.', 'Wala ma-issue ang QR pass. Sulayi pag-usab.')}
+        </Notice>
+        {!unavailable ? <Button onPress={() => void load()}>{t('Try again', 'Sulayi pag-usab')}</Button> : null}
+        <Button variant="outline" onPress={() => go('schedule')}>
+          {t('Back to schedule', 'Balik sa iskedyul')}
+        </Button>
+      </>
+    );
+  }
+  if (!pass) return null;
   return (
     <>
       <Card style={{ alignItems: 'center' }}>
         <Txt variant="label" style={{ textAlign: 'center', color: c.primary }}>
-          {a.program}
+          {pass.schedule.program.name}
         </Txt>
-        <Txt variant="small">{a.date}</Txt>
+        <Txt variant="small">{formatDate(pass.schedule.date)}</Txt>
         <View
           style={{ padding: 12, backgroundColor: c.card }}
-          accessibilityLabel="Demo QR code; invalid for real claims"
+          accessibilityLabel={t('Active QR claim pass', 'Aktibong QR claim pass')}
         >
           <QRCode
-            value="GARANTIYAID-DEMO-047-NOT-VALID-FOR-CLAIM"
+            value={pass.claimCode}
             size={220}
             color={c.navy}
             backgroundColor={c.card}
           />
         </View>
-        <Txt variant="number">{a.queue}</Txt>
-        <Txt variant="small">{a.time}</Txt>
-        <Txt variant="label" style={{ textAlign: 'center' }}>
-          {a.venue}
+        <Txt variant="number">{formatQueueNumber(pass.schedule.queueNumber)}</Txt>
+        <Txt variant="small">
+          {formatTimeSlot(pass.schedule.slotStart, pass.schedule.slotEnd)}
         </Txt>
-        <Badge tone={claimCompleted ? 'success' : 'warning'}>
-          {claimCompleted
-            ? t('Used in preview', 'Nagamit sa preview')
-            : t('Demo pass', 'Demo pass')}
-        </Badge>
+        <Txt variant="label" style={{ textAlign: 'center' }}>
+          {pass.schedule.location}
+        </Txt>
+        <Badge tone="success">{t('Active pass', 'Aktibong pass')}</Badge>
       </Card>
       <Notice>
         {t(
-          'Present your QR pass to staff at the distribution center. This sample QR is invalid for actual claims.',
-          'Ipakita ang QR pass sa staff sa distribution center. Dili balido kini nga sample QR alang sa tinuod nga claim.',
+          `Show this pass only to authorized staff. It expires ${formatDateTime(pass.expiresAt)}.`,
+          `Ipakita lamang kini sa awtorisadong staff. Ma-expire kini ${formatDateTime(pass.expiresAt)}.`,
         )}
       </Notice>
-      <Button disabled={claimCompleted} onPress={() => go('verify-identity')}>
-        {claimCompleted
-          ? t('Already claimed in preview', 'Naclaim na sa preview')
-          : t('Preview identity verification', 'Tan-awa ang pagverify')}
-      </Button>
-      <Button variant="outline" onPress={() => go('qr-expired')}>
-        {t('Preview expired pass', 'Tan-awa ang expired nga pass')}
+      <Button variant="outline" onPress={() => go('schedule')}>
+        {t('Back to schedule', 'Balik sa iskedyul')}
       </Button>
     </>
   );

@@ -11,6 +11,7 @@ import {
   FileText,
   History,
   MapPin,
+  QrCode,
   ScanFace,
   ShieldCheck,
   UserRound,
@@ -133,11 +134,11 @@ export function HomeScreen() {
             </View>
           </View>
           <Button
-            icon={CalendarDays}
+            icon={QrCode}
             style={{ backgroundColor: '#3572AE' }}
-            onPress={() => go('schedule')}
+            onPress={() => go('qr-pass')}
           >
-            {t('View schedule details', 'Tan-awa ang detalye sa iskedyul')}
+            {t('View my QR pass', 'Tan-awa akong QR pass')}
           </Button>
         </View>
       ) : (

@@ -1,6 +1,6 @@
 # Garantiy-Aid backend
 
-This is the real-data API for the beneficiary mobile app. It implements account access, the signed-in beneficiary profile, program enrollments, and the next assigned distribution schedule. Data is stored in PostgreSQL through Prisma.
+This is the real-data API for the beneficiary mobile app. It implements account access, the signed-in beneficiary profile, program enrollments, the next assigned distribution schedule, and scoped QR claim-pass issuance. Data is stored in PostgreSQL through Prisma.
 
 ## Run locally
 
@@ -34,5 +34,8 @@ During development, OTP codes are printed in the backend terminal and returned a
 - `POST /auth/logout`
 - `GET /beneficiaries/me`
 - `GET /beneficiaries/me/overview`
+- `POST /beneficiaries/me/claim-pass`
 
 Protected endpoints use `Authorization: Bearer <accessToken>`. Access tokens are random, stored only as hashes, expire after seven days, and are revoked by logout.
+
+Claim passes are opaque, distribution-scoped values returned only when issued. PostgreSQL stores a keyed hash rather than the raw QR value. Issuing a replacement revokes the previous active pass, and each pass expires at the end of its assigned schedule. Staff-side scanning and claim approval remain separate work.

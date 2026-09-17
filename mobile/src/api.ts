@@ -102,6 +102,28 @@ export type BeneficiaryOverview = {
   nextSchedule: ClaimingSchedule | null;
 };
 
+export type ClaimPass = {
+  id: string;
+  claimCode: string;
+  status: string;
+  issuedAt: string;
+  expiresAt: string;
+  schedule: {
+    id: string;
+    distributionId: string;
+    date: string;
+    slotStart: string;
+    slotEnd: string;
+    queueNumber: number;
+    location: string;
+    program: {
+      id: string;
+      code: string;
+      name: string;
+    };
+  };
+};
+
 type OtpResponse = { data: { expiresInSeconds?: number; developmentOtp?: string } };
 
 export async function getBarangays() {
@@ -172,6 +194,15 @@ export async function getCurrentBeneficiary(accessToken: string) {
 export async function getBeneficiaryOverview(accessToken: string) {
   return (
     await request<{ data: BeneficiaryOverview }>('/beneficiaries/me/overview', {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    })
+  ).data;
+}
+
+export async function issueClaimPass(accessToken: string) {
+  return (
+    await request<{ data: ClaimPass }>('/beneficiaries/me/claim-pass', {
+      method: 'POST',
       headers: { Authorization: `Bearer ${accessToken}` },
     })
   ).data;
