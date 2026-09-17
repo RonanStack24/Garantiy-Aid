@@ -11,7 +11,6 @@ import {
   FileText,
   History,
   MapPin,
-  QrCode,
   ScanFace,
   ShieldCheck,
   UserRound,
@@ -21,6 +20,7 @@ import {
   Badge,
   Button,
   Card,
+  DetailRow,
   flow,
   go,
   LanguageToggle,
@@ -33,11 +33,21 @@ import {
 } from '../components';
 import { appointment as a, peso, transactions, useDemo } from '../state';
 import { ApiRequestError, logout } from '../api';
+import { formatDate, formatQueueNumber, formatStatus, formatTimeSlot } from '../format';
 import { colors as c, fonts } from '../theme';
 
 export function HomeScreen() {
-  const { name, language, faceEnrolled, claimCompleted, readNotifications, t } =
-    useDemo();
+  const {
+    name,
+    faceEnrolled,
+    overview,
+    overviewLoading,
+    overviewError,
+    refreshOverview,
+    readNotifications,
+    t,
+  } = useDemo();
+  const schedule = overview?.nextSchedule;
   return (
     <Page tabs header={false}>
       <View style={[styles.row, { flexWrap: 'wrap', gap: 8 }]}>
@@ -61,60 +71,87 @@ export function HomeScreen() {
           <LanguageToggle />
         </View>
       </View>
-      <View style={s.scheduleCard}>
-        <View
-          style={[
-            styles.row,
-            { justifyContent: 'space-between', alignItems: 'flex-start' },
-          ]}
-        >
-          <Txt variant="small" style={s.cardCaption}>
-            {t('YOUR NEXT CLAIMING\nSCHEDULE', 'IMONG SUNOD NGA\nISKEDYUL SA CLAIM')}
-          </Txt>
-          <Badge tone={claimCompleted ? 'success' : 'warning'}>
-            {claimCompleted ? t('Claimed', 'Naclaim') : t('Upcoming', 'Umaabot')}
-          </Badge>
-        </View>
-        <View style={s.cardDetails}>
-          {[
-            { Icon: ShieldCheck, value: a.program },
-            { Icon: CalendarDays, value: language === 'en' ? a.date : a.dateBisaya },
-            { Icon: Clock3, value: a.time },
-          ].map(({ Icon, value }) => (
-            <View key={value} style={[styles.row, { gap: 8 }]}>
-              <Icon size={15} color="#C7E1FF" />
-              <Txt variant="small" style={{ color: c.card, flex: 1 }}>
-                {value}
+      {overviewLoading ? (
+        <Card>
+          <Txt variant="label">{t('Loading your schedule…', 'Nag-load sa imong iskedyul…')}</Txt>
+        </Card>
+      ) : overviewError ? (
+        <>
+          <Notice tone="error">
+            {t(
+              'Your enrollment and schedule could not be loaded.',
+              'Wala ma-load ang imong enrollment ug iskedyul.',
+            )}
+          </Notice>
+          <Button variant="outline" onPress={() => void refreshOverview()}>
+            {t('Try again', 'Sulayi pag-usab')}
+          </Button>
+        </>
+      ) : schedule ? (
+        <View style={s.scheduleCard}>
+          <View
+            style={[
+              styles.row,
+              { justifyContent: 'space-between', alignItems: 'flex-start' },
+            ]}
+          >
+            <Txt variant="small" style={s.cardCaption}>
+              {t('YOUR NEXT CLAIMING\nSCHEDULE', 'IMONG SUNOD NGA\nISKEDYUL SA CLAIM')}
+            </Txt>
+            <Badge>{formatStatus(schedule.status)}</Badge>
+          </View>
+          <View style={s.cardDetails}>
+            {[
+              { Icon: ShieldCheck, value: schedule.program.name },
+              { Icon: CalendarDays, value: formatDate(schedule.date) },
+              { Icon: Clock3, value: formatTimeSlot(schedule.slotStart, schedule.slotEnd) },
+            ].map(({ Icon, value }) => (
+              <View key={value} style={[styles.row, { gap: 8 }]}>
+                <Icon size={15} color="#C7E1FF" />
+                <Txt variant="small" style={{ color: c.card, flex: 1 }}>
+                  {value}
+                </Txt>
+              </View>
+            ))}
+          </View>
+          <View style={s.queuePanel}>
+            <View>
+              <Txt variant="small" style={s.cardCaption}>
+                {t('QUEUE NUMBER', 'NUMERO SA PILA')}
+              </Txt>
+              <Txt variant="number" style={{ color: c.card }}>
+                {formatQueueNumber(schedule.queueNumber)}
               </Txt>
             </View>
-          ))}
-        </View>
-        <View style={s.queuePanel}>
-          <View>
-            <Txt variant="small" style={s.cardCaption}>
-              {t('QUEUE NUMBER', 'NUMERO SA PILA')}
-            </Txt>
-            <Txt variant="number" style={{ color: c.card }}>
-              {a.queue}
-            </Txt>
+            <View style={{ maxWidth: 135, flex: 1, gap: 4 }}>
+              <Txt variant="small" style={[s.cardCaption, { textAlign: 'right' }]}>
+                {t('VENUE', 'LUGAR')}
+              </Txt>
+              <Txt variant="small" style={{ color: c.card, textAlign: 'right' }}>
+                {schedule.location}
+              </Txt>
+            </View>
           </View>
-          <View style={{ maxWidth: 135, flex: 1, gap: 4 }}>
-            <Txt variant="small" style={[s.cardCaption, { textAlign: 'right' }]}>
-              {t('VENUE', 'LUGAR')}
-            </Txt>
-            <Txt variant="small" style={{ color: c.card, textAlign: 'right' }}>
-              {a.venue}
-            </Txt>
-          </View>
+          <Button
+            icon={CalendarDays}
+            style={{ backgroundColor: '#3572AE' }}
+            onPress={() => go('schedule')}
+          >
+            {t('View schedule details', 'Tan-awa ang detalye sa iskedyul')}
+          </Button>
         </View>
-        <Button
-          icon={QrCode}
-          style={{ backgroundColor: '#3572AE' }}
-          onPress={() => go('qr-pass')}
-        >
-          {t('View my QR pass', 'Tan-awa akong QR pass')}
-        </Button>
-      </View>
+      ) : (
+        <Card>
+          <CalendarDays size={28} color={c.primary} />
+          <Txt variant="heading">{t('No claiming schedule yet', 'Wala pay iskedyul sa claim')}</Txt>
+          <Txt variant="small">
+            {t(
+              'Your assigned schedule will appear here after your enrollment is approved.',
+              'Makita dinhi ang imong iskedyul human maaprubahan ang enrollment.',
+            )}
+          </Txt>
+        </Card>
+      )}
       {!faceEnrolled && (
         <Pressable accessibilityRole="button" onPress={() => flow('consent')}>
           <Notice tone="warning">
@@ -167,8 +204,8 @@ export function HomeScreen() {
       </View>
       <Notice>
         {t(
-          'Prototype preview · Sample beneficiary and schedule data.',
-          'Prototype preview · Sample nga beneficiary ug iskedyul.',
+          'Enrollment and schedule data come from your saved account. QR passes, claims, and wallet entries remain previews.',
+          'Ang enrollment ug iskedyul gikan sa imong account. Preview pa ang QR pass, claims, ug wallet.',
         )}
       </Notice>
     </Page>
@@ -320,7 +357,7 @@ export function WalletScreen() {
 }
 
 export function ProfileScreen() {
-  const { name, phone, accessToken, faceEnrolled, t, reset } = useDemo();
+  const { name, phone, beneficiary, accessToken, faceEnrolled, t, reset } = useDemo();
   const [logoutLoading, setLogoutLoading] = useState(false);
   const [logoutError, setLogoutError] = useState('');
   return (
@@ -338,13 +375,29 @@ export function ProfileScreen() {
           </View>
           <View style={{ flex: 1, gap: 4 }}>
             <Txt variant="heading">{name}</Txt>
-            <Txt variant="small">+63 {phone || '9175550147'}</Txt>
-            <Txt variant="small" style={{ color: c.primary, fontSize: 11 }}>
-              {a.program}
-            </Txt>
+            <Txt variant="small">{beneficiary?.contactNumber ?? `+63${phone}`}</Txt>
           </View>
         </View>
+        <Badge tone={beneficiary?.isVerified ? 'success' : 'warning'}>
+          {beneficiary?.isVerified
+            ? t('Verified account', 'Naverify nga account')
+            : t('Verification pending', 'Naghulat sa verification')}
+        </Badge>
       </Card>
+      {beneficiary ? (
+        <Card>
+          <DetailRow
+            icon={MapPin}
+            label={t('Saved address', 'Natipig nga adres')}
+            value={beneficiary.address}
+          />
+          <DetailRow
+            icon={ShieldCheck}
+            label={t('Account status', 'Kahimtang sa account')}
+            value={beneficiary.status.charAt(0).toUpperCase() + beneficiary.status.slice(1)}
+          />
+        </Card>
+      ) : null}
       <Card style={{ paddingVertical: 8 }}>
         <View style={[styles.row, { justifyContent: 'space-between' }]}>
           <Txt variant="label">{t('Language', 'Pinulongan')}</Txt>
@@ -353,7 +406,7 @@ export function ProfileScreen() {
       </Card>
       <Card style={{ gap: 0, paddingVertical: 4 }}>
         <MenuRow
-          title={t('Edit my details', 'Usba akong detalye')}
+          title={t('My saved details', 'Akong natipig nga detalye')}
           icon={UserRound}
           onPress={() => go('edit-profile')}
         />

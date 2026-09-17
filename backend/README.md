@@ -1,6 +1,6 @@
 # Garantiy-Aid backend
 
-This is the first real-data API for the beneficiary mobile app. It implements barangay lookup, account registration, OTP verification, OTP login, logout, and the signed-in beneficiary profile. Data is stored in PostgreSQL through Prisma.
+This is the real-data API for the beneficiary mobile app. It implements account access, the signed-in beneficiary profile, program enrollments, and the next assigned distribution schedule. Data is stored in PostgreSQL through Prisma.
 
 ## Run locally
 
@@ -20,7 +20,7 @@ npm run db:seed
 npm run dev
 ```
 
-The API listens at `http://localhost:3000`. `GET /health` confirms that PostgreSQL is connected.
+The API listens at `http://localhost:3000`. `GET /health` confirms that PostgreSQL is connected. The seed creates the verified mobile test account `0917 555 0147` with an approved 4Ps enrollment and an upcoming schedule.
 
 During development, OTP codes are printed in the backend terminal and returned as `developmentOtp` in the response. Production never returns or logs the code; an SMS provider must be connected before production use.
 
@@ -33,5 +33,6 @@ During development, OTP codes are printed in the backend terminal and returned a
 - `POST /auth/otp/verify`
 - `POST /auth/logout`
 - `GET /beneficiaries/me`
+- `GET /beneficiaries/me/overview`
 
 Protected endpoints use `Authorization: Bearer <accessToken>`. Access tokens are random, stored only as hashes, expire after seven days, and are revoked by logout.

@@ -11,7 +11,8 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MessageCircle, Phone, Send } from 'lucide-react-native';
 import { go, LanguageToggle, Notice, styles, Txt } from '../components';
-import { appointment as a, useDemo } from '../state';
+import { useDemo } from '../state';
+import { formatDate, formatQueueNumber, formatTimeSlot } from '../format';
 import { colors as c } from '../theme';
 
 type Message = { id: number; role: 'user' | 'assistant'; en: string; bs: string };
@@ -22,7 +23,7 @@ const greeting: Message = {
   bs: 'Kumusta! Ako ang assistant sa GarantiyAid. Makatabang ko sa imong iskedyul, dad-on, ug kahimtang sa claim. Unsay gusto nimong mahibal-an?',
 };
 export function HelpScreen() {
-  const { t, claimCompleted } = useDemo();
+  const { t, claimCompleted, overview } = useDemo();
   const [messages, setMessages] = useState<Message[]>([greeting]);
   const [input, setInput] = useState('');
   const scroll = useRef<ScrollView>(null);
@@ -76,10 +77,15 @@ export function HelpScreen() {
             en: 'No completed claim is recorded in this preview session. You can view your sample schedule and QR pass from Home. This is sample information, not an official claim status.',
             bs: 'Wala pay nahuman nga claim niining preview session. Makita sa Home ang sample nga iskedyul ug QR pass. Sample nga impormasyon kini, dili opisyal nga kahimtang sa claim.',
           },
-      schedule: {
-        en: `Your sample claiming schedule is July 10, 2025 from ${a.time} at ${a.venue}. Your queue number is ${a.queue}. Please arrive only at your assigned time.`,
-        bs: `Ang sample nga iskedyul kay Hulyo 10, 2025, ${a.time} sa ${a.venue}. Ang numero sa pila kay ${a.queue}. Abot lamang sa gitakdang oras.`,
-      },
+      schedule: overview?.nextSchedule
+        ? {
+            en: `Your next claiming schedule is ${formatDate(overview.nextSchedule.date)} from ${formatTimeSlot(overview.nextSchedule.slotStart, overview.nextSchedule.slotEnd)} at ${overview.nextSchedule.location}. Your queue number is ${formatQueueNumber(overview.nextSchedule.queueNumber)}.`,
+            bs: `Ang imong sunod nga iskedyul kay ${formatDate(overview.nextSchedule.date)}, ${formatTimeSlot(overview.nextSchedule.slotStart, overview.nextSchedule.slotEnd)} sa ${overview.nextSchedule.location}. Ang numero sa pila kay ${formatQueueNumber(overview.nextSchedule.queueNumber)}.`,
+          }
+        : {
+            en: 'No claiming schedule is assigned to your account yet. Check Home again later or contact your facilitator.',
+            bs: 'Wala pay iskedyul sa claim nga gi-assign sa imong account. Tan-awa pag-usab ang Home o kontaka ang facilitator.',
+          },
       bring: {
         en: 'Bring your QR claim pass on your phone and follow the instructions from your assigned facilitator. This preview does not determine official documentary requirements.',
         bs: 'Dad-a ang QR claim pass sa imong cellphone ug sundon ang giingon sa facilitator. Kini nga preview dili motino sa opisyal nga kinahanglanon.',
@@ -142,8 +148,8 @@ export function HelpScreen() {
         >
           <Notice>
             {t(
-              'Prototype assistant · Responses use sample information.',
-              'Prototype assistant · Ang tubag naggamit sa sample nga impormasyon.',
+              'Prototype assistant · Schedule answers use your saved account; other answers remain previews.',
+              'Prototype assistant · Ang iskedyul gikan sa imong account; preview pa ang ubang tubag.',
             )}
           </Notice>
           {messages.map((message) => (

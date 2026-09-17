@@ -2,7 +2,7 @@
 
 These are the mobile frontend's requirements, derived from the manuscript and latest ERD. The first beneficiary-account endpoints now live in `../../backend`; the remaining rows describe later milestones.
 
-## Implemented account API
+## Implemented mobile API
 
 | Endpoint | Mobile use |
 | --- | --- |
@@ -12,13 +12,14 @@ These are the mobile frontend's requirements, derived from the manuscript and la
 | `POST /auth/otp/verify` | Activates registration or logs in and returns a bearer session. |
 | `POST /auth/logout` | Revokes the current bearer session. |
 | `GET /beneficiaries/me` | Returns the authenticated beneficiary profile. |
+| `GET /beneficiaries/me/overview` | Returns program enrollments and the next assigned distribution schedule. |
 
 | Capability                      | Required behavior and fields                                                                                                                                                                                                                    |
 | ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Registration and authentication | **Implemented for phone OTP.** Secure device token storage, startup restoration, protected tab navigation, and logout are connected. Password recovery and face login remain.                                                                 |
 | Beneficiary profile             | Beneficiary ID, name, contact number, barangay, verification status, permitted edits, and enrolled programs.                                                                                                                                    |
-| Program enrollment              | Program, submission date, status, approval progress, required documents, validation result, and assigned staff contact.                                                                                                                         |
-| Schedules                       | Distribution and schedule IDs, program, date, start/end, queue number, location, status, and notification of changes. Backend assigns slots and queue numbers.                                                                                  |
+| Program enrollment              | **Implemented for program, enrollment date, grant amount, and status.** Required documents, validation results, and assigned staff contact remain.                                                                                              |
+| Schedules                       | **Implemented for the next assigned schedule:** distribution and schedule IDs, program, date, start/end, queue number, location, and status. Change notifications remain.                                                                       |
 | QR claim pass                   | Server-issued opaque token, distribution scope, expiry, and used/revoked status. Generate and validate tokens on the server. Never trust the mobile demo QR.                                                                                    |
 | Claims                          | Authoritative validation, authorized staff action, claim status, amount, program, date, receipt reference, and duplicate blocking across devices. The mobile client displays the result.                                                        |
 | Consent and biometrics          | Versioned privacy notice and consent, consent ID and timestamps, withdrawal, secure photo upload if allowed, face enrollment result, and server-side matching/liveness. The client captures a photo; it does not declare a real identity match. |

@@ -214,6 +214,64 @@ app.get("/beneficiaries/me", async (req, res) => {
   res.json({ data: publicBeneficiary(beneficiary) });
 });
 
+app.get("/beneficiaries/me/overview", async (req, res) => {
+  const { beneficiary } = await requireBeneficiary(req);
+  const [enrollments, nextSchedule] = await Promise.all([
+    prisma.enrollment.findMany({
+      where: { beneficiaryId: beneficiary.beneficiaryId },
+      include: { program: true },
+      orderBy: { enrollmentDate: "desc" },
+    }),
+    prisma.schedule.findFirst({
+      where: {
+        beneficiaryId: beneficiary.beneficiaryId,
+        slotEnd: { gte: new Date() },
+        status: { in: ["scheduled", "rescheduled"] },
+        distribution: { status: { not: "cancelled" } },
+      },
+      include: { distribution: { include: { program: true } } },
+      orderBy: { slotStart: "asc" },
+    }),
+  ]);
+
+  res.json({
+    data: {
+      enrollments: enrollments.map(({ program, ...enrollment }) => ({
+        id: enrollment.enrollmentId,
+        enrollmentDate: enrollment.enrollmentDate.toISOString().slice(0, 10),
+        status: enrollment.status,
+        program: {
+          id: program.programId,
+          code: program.programCode,
+          name: program.programName,
+          type: program.programType,
+          description: program.description,
+          grantAmount: Number(program.grantAmount),
+        },
+      })),
+      nextSchedule: nextSchedule
+        ? {
+            id: nextSchedule.scheduleId,
+            distributionId: nextSchedule.distributionId,
+            title: nextSchedule.distribution.title,
+            date: nextSchedule.distribution.distributionDate.toISOString().slice(0, 10),
+            slotStart: nextSchedule.slotStart.toISOString(),
+            slotEnd: nextSchedule.slotEnd.toISOString(),
+            queueNumber: nextSchedule.queueNumber,
+            location: nextSchedule.distribution.location,
+            status: nextSchedule.status,
+            program: {
+              id: nextSchedule.distribution.program.programId,
+              code: nextSchedule.distribution.program.programCode,
+              name: nextSchedule.distribution.program.programName,
+              grantAmount: Number(nextSchedule.distribution.program.grantAmount),
+            },
+          }
+        : null,
+    },
+  });
+});
+
 app.use((_req, _res, next) => next(new ApiError(404, "NOT_FOUND", "Endpoint not found.")));
 
 app.use((error: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {

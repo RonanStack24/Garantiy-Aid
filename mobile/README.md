@@ -20,15 +20,15 @@ Skip optional face enrollment or choose demo capture. Camera access is requested
 
 ## Implemented frontend
 
-- English/Bisaya four-step account creation backed by PostgreSQL, including active-barangay validation, generated OTP verification, phone login, authenticated profile identity, and server-side logout.
+- English/Bisaya four-step account creation backed by PostgreSQL, including active-barangay validation, generated OTP verification, phone login, complete saved beneficiary details, and server-side logout.
 - Optional biometric consent, front-camera photo capture, retake, demo enrollment success, and consent withdrawal.
-- Home appointment card, schedule details, queue number, demo QR pass, identity verification preview, claim confirmation, and duplicate-attempt handling within the preview session.
+- Database-backed program enrollment, Home claiming schedule, schedule details, queue number, and empty/error/retry states. The QR pass, identity verification, and claim completion flows remain previews.
 - Simulated wallet, receipt modal, transaction history, and selected receipts. Preview claiming updates the simulated balance once per session.
 - Notifications with read state and detail views, profile editing, notification preference controls, enrollment progress, missing-document file selection, and recovery screens.
 - Sample assistant conversations for schedule, current demo claim status, documents, face scan failure, and enrollment; staff-support preview.
 - Schedule update, expired QR, and claim-review states.
 
-Registration and authentication use the local backend database. Schedule, transaction, enrollment, notification, biometric, and claim records remain synthetic. Session tokens are encrypted with Expo SecureStore on Android and iOS, while the browser preview uses local storage. On startup the app validates the saved session through `/beneficiaries/me`; expired sessions return to Welcome and signed-out users cannot open the tab routes.
+Registration, authentication, beneficiary profiles, program enrollments, and the next distribution schedule use the local backend database. Transaction, notification, biometric, QR, and claim records remain synthetic. Session tokens are encrypted with Expo SecureStore on Android and iOS, while the browser preview uses local storage. On startup the app validates the saved session through `/beneficiaries/me`; expired sessions return to Welcome and signed-out users cannot open the tab routes.
 
 ## Figma reference
 

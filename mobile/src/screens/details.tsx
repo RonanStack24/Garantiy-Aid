@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Switch, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import * as DocumentPicker from 'expo-document-picker';
@@ -37,6 +37,8 @@ import {
 } from '../components';
 import { appointment as a, notices, peso, transactions, useDemo } from '../state';
 import { colors as c, fonts } from '../theme';
+import { getBarangays } from '../api';
+import { formatDate, formatQueueNumber, formatStatus, formatTimeSlot } from '../format';
 import { s as mainStyles } from './main';
 
 export function DetailScreen() {
@@ -74,7 +76,7 @@ export function DetailScreen() {
       active: 'profile',
     },
     'edit-profile': {
-      title: t('Edit my details', 'Usba akong detalye'),
+      title: t('My saved details', 'Akong natipig nga detalye'),
       content: <EditProfile />,
       active: 'profile',
     },
@@ -149,44 +151,76 @@ export function DetailScreen() {
 }
 
 function Schedule() {
-  const { language, claimCompleted, t } = useDemo();
+  const { overview, overviewLoading, overviewError, refreshOverview, t } = useDemo();
+  if (overviewLoading) {
+    return <Notice>{t('Loading your schedule…', 'Nag-load sa imong iskedyul…')}</Notice>;
+  }
+  if (overviewError) {
+    return (
+      <>
+        <Notice tone="error">
+          {t('Your schedule could not be loaded.', 'Wala ma-load ang imong iskedyul.')}
+        </Notice>
+        <Button onPress={() => void refreshOverview()}>{t('Try again', 'Sulayi pag-usab')}</Button>
+      </>
+    );
+  }
+  const schedule = overview?.nextSchedule;
+  if (!schedule) {
+    return (
+      <>
+        <Notice>
+          {t(
+            'No claiming schedule has been assigned to your account yet.',
+            'Wala pay iskedyul sa claim nga gi-assign sa imong account.',
+          )}
+        </Notice>
+        <Button variant="outline" onPress={() => void refreshOverview()}>
+          {t('Refresh schedule', 'I-refresh ang iskedyul')}
+        </Button>
+      </>
+    );
+  }
   return (
     <>
-      <Badge tone={claimCompleted ? 'success' : 'warning'}>
-        {claimCompleted
-          ? t('Claimed in preview', 'Naclaim sa preview')
-          : t('Upcoming', 'Umaabot')}
-      </Badge>
+      <Badge>{formatStatus(schedule.status)}</Badge>
       <Card>
         <DetailRow
           icon={ShieldCheck}
           label={t('Program', 'Programa')}
-          value={a.program}
+          value={schedule.program.name}
         />
         <DetailRow
           icon={CalendarDays}
           label={t('Date', 'Petsa')}
-          value={language === 'en' ? a.date : a.dateBisaya}
+          value={formatDate(schedule.date)}
         />
-        <DetailRow icon={Clock3} label={t('Time slot', 'Oras')} value={a.time} />
+        <DetailRow
+          icon={Clock3}
+          label={t('Time slot', 'Oras')}
+          value={formatTimeSlot(schedule.slotStart, schedule.slotEnd)}
+        />
         <DetailRow
           icon={Users}
           label={t('Queue number', 'Numero sa pila')}
-          value={a.queue}
+          value={formatQueueNumber(schedule.queueNumber)}
         />
-        <DetailRow icon={MapPin} label={t('Venue', 'Lugar')} value={a.venue} />
+        <DetailRow icon={MapPin} label={t('Venue', 'Lugar')} value={schedule.location} />
       </Card>
       <Notice>
         {t(
-          'Sample schedule for the frontend preview. Offline caching will be added when the scheduling API is connected.',
-          'Sample nga iskedyul alang sa preview. Idugang ang offline caching kon konektado na ang API.',
+          'This schedule is assigned to your saved beneficiary account. Arrive only during your time slot.',
+          'Kini nga iskedyul gi-assign sa imong beneficiary account. Abot lamang sa imong oras.',
         )}
       </Notice>
-      <Button icon={QrCode} onPress={() => go('qr-pass')}>
-        {t('View my QR pass', 'Tan-awa akong QR pass')}
-      </Button>
-      <Button variant="outline" onPress={() => go('schedule-update')}>
-        {t('Preview a schedule update', 'Tan-awa ang nausab nga iskedyul')}
+      <Notice tone="warning">
+        {t(
+          'A valid QR pass will appear here after the server issues one. Do not use the preview QR for claiming.',
+          'Makita dinhi ang balidong QR pass human kini i-issue sa server. Ayaw gamita ang preview QR sa claim.',
+        )}
+      </Notice>
+      <Button variant="outline" onPress={() => void refreshOverview()}>
+        {t('Refresh schedule', 'I-refresh ang iskedyul')}
       </Button>
     </>
   );
@@ -530,47 +564,86 @@ function Recovery() {
   );
 }
 function EditProfile() {
-  const { name, setName, t } = useDemo();
-  const [value, setValue] = useState(name);
-  const [error, setError] = useState('');
-  const [saved, setSaved] = useState(false);
-  return (
-    <>
-      <Field
-        label={t('Full name', 'Kompletong ngalan')}
-        value={value}
-        onChangeText={(text) => {
-          setValue(text);
-          setSaved(false);
-        }}
-        error={error}
-      />
-      <Notice>
+  const { beneficiary, t } = useDemo();
+  const [serviceArea, setServiceArea] = useState<string | null>(null);
+  useEffect(() => {
+    if (!beneficiary) return;
+    let active = true;
+    setServiceArea(null);
+    getBarangays()
+      .then((barangays) => {
+        const barangay = barangays.find((item) => item.id === beneficiary.barangayId);
+        if (active) {
+          setServiceArea(
+            barangay
+              ? `${barangay.barangayName}, ${barangay.city}, ${barangay.province}`
+              : '',
+          );
+        }
+      })
+      .catch(() => {
+        if (active) setServiceArea('');
+      });
+    return () => {
+      active = false;
+    };
+  }, [beneficiary]);
+  if (!beneficiary) {
+    return (
+      <Notice tone="error">
         {t(
-          'Changes apply only to this preview session. Official beneficiary records are managed by authorized staff.',
-          'Ang kausaban alang lamang niining preview. Ang opisyal nga rekord gidumala sa awtorisadong staff.',
+          'Your saved profile could not be loaded. Return to Profile and try again.',
+          'Wala ma-load ang imong profile. Balik sa Profile ug sulayi pag-usab.',
         )}
       </Notice>
-      {saved && (
-        <Notice tone="success">
-          {t(
-            'Your preview profile has been updated.',
-            'Nausab na ang profile sa preview.',
-          )}
-        </Notice>
-      )}
-      <Button
-        onPress={() => {
-          if (value.trim().length < 2) {
-            setError(t('Enter your full name.', 'Isulod imong kompletong ngalan.'));
-            return;
+    );
+  }
+  const fullName = [beneficiary.firstName, beneficiary.middleName, beneficiary.lastName]
+    .filter(Boolean)
+    .join(' ');
+  const birthDate = new Intl.DateTimeFormat('en-PH', {
+    dateStyle: 'long',
+    timeZone: 'UTC',
+  }).format(new Date(`${beneficiary.birthDate}T00:00:00Z`));
+  const sex = {
+    female: t('Female', 'Babaye'),
+    male: t('Male', 'Lalaki'),
+    prefer_not_to_say: t('Prefer not to say', 'Dili isulti'),
+  }[beneficiary.sex] ?? beneficiary.sex;
+  return (
+    <>
+      <Badge tone={beneficiary.isVerified ? 'success' : 'warning'}>
+        {beneficiary.isVerified
+          ? t('Verified account', 'Naverify nga account')
+          : t('Verification pending', 'Naghulat sa verification')}
+      </Badge>
+      <Card>
+        <DetailRow label={t('Full name', 'Kompletong ngalan')} value={fullName} />
+        <DetailRow label={t('Birth date', 'Petsa sa pagkatawo')} value={birthDate} />
+        <DetailRow label={t('Sex', 'Sekso')} value={sex} />
+        <DetailRow label={t('Mobile number', 'Numero sa cellphone')} value={beneficiary.contactNumber} />
+        <DetailRow label={t('House no. and street', 'Numero sa balay ug dalan')} value={beneficiary.address} />
+        <DetailRow
+          label={t('Barangay and city', 'Barangay ug siyudad')}
+          value={
+            serviceArea === null
+              ? t('Loading service area…', 'Nag-load sa service area…')
+              : serviceArea || t('Unavailable', 'Dili magamit')
           }
-          setName(value.trim());
-          setError('');
-          setSaved(true);
-        }}
-      >
-        {t('Save details', 'Isave ang detalye')}
+        />
+        <DetailRow
+          label={t('Account status', 'Kahimtang sa account')}
+          value={beneficiary.status.charAt(0).toUpperCase() + beneficiary.status.slice(1)}
+        />
+      </Card>
+      <Notice>
+        {t(
+          'These details come from your saved beneficiary record. Contact your facilitator to request an official correction.',
+          'Kini nga mga detalye gikan sa natipig nga beneficiary record. Kontaka ang facilitator aron mangayo og opisyal nga koreksyon.',
+        )}
+      </Notice>
+      <Button onPress={() => go('support')}>
+        {t('Request a correction', 'Mangayo og koreksyon')}
       </Button>
     </>
   );
@@ -637,67 +710,82 @@ function NotificationSettings() {
 }
 
 function EnrollmentStatus() {
-  const { name, t } = useDemo();
+  const { overview, overviewLoading, overviewError, refreshOverview, t } = useDemo();
+  if (overviewLoading) {
+    return <Notice>{t('Loading your enrollment…', 'Nag-load sa imong enrollment…')}</Notice>;
+  }
+  if (overviewError) {
+    return (
+      <>
+        <Notice tone="error">
+          {t('Your enrollment could not be loaded.', 'Wala ma-load ang imong enrollment.')}
+        </Notice>
+        <Button onPress={() => void refreshOverview()}>{t('Try again', 'Sulayi pag-usab')}</Button>
+      </>
+    );
+  }
+  const enrollments = overview?.enrollments ?? [];
+  if (enrollments.length === 0) {
+    return (
+      <>
+        <Notice>
+          {t(
+            'No program enrollment is recorded for your account yet.',
+            'Wala pay program enrollment nga narehistro sa imong account.',
+          )}
+        </Notice>
+        <Button variant="outline" onPress={() => go('support')}>
+          {t('Contact facilitator', 'Kontaka ang facilitator')}
+        </Button>
+      </>
+    );
+  }
   return (
     <>
-      <Card>
-        <View
-          style={[
-            styles.row,
-            { justifyContent: 'space-between', alignItems: 'flex-start' },
-          ]}
-        >
-          <Txt variant="label" style={{ flex: 1 }}>
-            4Ps Program
-          </Txt>
-          <Badge>{t('Pending approval', 'Naghulat og pag-apruba')}</Badge>
-        </View>
-        <Txt variant="small">
-          {name} · {t('Pending 3 days', 'Naghulat 3 ka adlaw')}
-        </Txt>
-        <Txt variant="small">{t('Submitted May 20, 2025', 'Gisumite Mayo 20, 2025')}</Txt>
-      </Card>
-      <Txt variant="small" style={{ fontFamily: fonts.semibold }}>
-        {t('APPLICATION PROGRESS', 'PROGRESO SA APLIKASYON')}
-      </Txt>
-      <Card>
-        {[
-          {
-            label: t('Account', 'Account'),
-            value: t('Registered', 'Narehistro'),
-            done: true,
-          },
-          {
-            label: t('Documents', 'Mga dokumento'),
-            value: t('Verified by facilitator', 'Naverify sa facilitator'),
-            done: true,
-          },
-          {
-            label: t('DSWD approval', 'Pag-apruba sa DSWD'),
-            value: t('Currently under review', 'Gisusi pa karon'),
-            done: false,
-          },
-        ].map((item) => (
-          <View key={item.label} style={styles.row}>
-            <CircleCheck size={20} color={item.done ? c.green : c.amber} />
-            <View style={{ gap: 4 }}>
-              <Txt variant="small">{item.label}</Txt>
-              <Txt variant="label">{item.value}</Txt>
+      {enrollments.map((enrollment) => {
+        const approved = enrollment.status === 'approved' || enrollment.status === 'active';
+        const rejected = enrollment.status === 'rejected';
+        return (
+          <Card key={enrollment.id}>
+            <View
+              style={[
+                styles.row,
+                { justifyContent: 'space-between', alignItems: 'flex-start' },
+              ]}
+            >
+              <Txt variant="label" style={{ flex: 1 }}>
+                {enrollment.program.name}
+              </Txt>
+              <Badge tone={approved ? 'success' : rejected ? 'error' : 'warning'}>
+                {formatStatus(enrollment.status)}
+              </Badge>
             </View>
-          </View>
-        ))}
-      </Card>
+            <DetailRow
+              label={t('Program code', 'Code sa programa')}
+              value={enrollment.program.code}
+            />
+            <DetailRow
+              label={t('Enrollment date', 'Petsa sa enrollment')}
+              value={formatDate(enrollment.enrollmentDate)}
+            />
+            <DetailRow
+              label={t('Grant amount', 'Kantidad sa ayuda')}
+              value={peso(enrollment.program.grantAmount)}
+            />
+          </Card>
+        );
+      })}
       <Notice>
         {t(
-          'Sample approval status. Documents are validated by an authorized DSWD facilitator.',
-          'Sample nga status. Ang mga dokumento givalidate sa awtorisadong DSWD facilitator.',
+          'These statuses come from your saved program enrollment records.',
+          'Kini nga mga status gikan sa imong natipig nga program enrollment records.',
         )}
       </Notice>
       <Button variant="outline" onPress={() => go('support')}>
         {t('Contact DSWD', 'Kontaka ang DSWD')}
       </Button>
-      <Button variant="outline" onPress={() => go('enrollment-documents')}>
-        {t('Preview missing documents', 'Tan-awa ang kulang nga dokumento')}
+      <Button variant="outline" onPress={() => void refreshOverview()}>
+        {t('Refresh status', 'I-refresh ang status')}
       </Button>
     </>
   );

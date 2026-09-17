@@ -1,5 +1,11 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { ApiRequestError, getCurrentBeneficiary, type Beneficiary } from './api';
+import {
+  ApiRequestError,
+  getBeneficiaryOverview,
+  getCurrentBeneficiary,
+  type Beneficiary,
+  type BeneficiaryOverview,
+} from './api';
 import { clearStoredToken, getStoredToken, storeToken } from './session-storage';
 
 type Language = 'en' | 'bs';
@@ -31,6 +37,11 @@ type DemoState = {
   phone: string;
   setPhone: (value: string) => void;
   accessToken: string;
+  beneficiary: Beneficiary | null;
+  overview: BeneficiaryOverview | null;
+  overviewLoading: boolean;
+  overviewError: boolean;
+  refreshOverview: () => Promise<void>;
   authLoading: boolean;
   authError: boolean;
   startSession: (token: string, beneficiary: Beneficiary) => Promise<void>;
@@ -55,6 +66,10 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
   const [language, setLanguage] = useState<Language>('en');
   const [phone, setPhone] = useState('');
   const [accessToken, setAccessToken] = useState('');
+  const [beneficiary, setBeneficiary] = useState<Beneficiary | null>(null);
+  const [overview, setOverview] = useState<BeneficiaryOverview | null>(null);
+  const [overviewLoading, setOverviewLoading] = useState(false);
+  const [overviewError, setOverviewError] = useState(false);
   const [authLoading, setAuthLoading] = useState(true);
   const [authError, setAuthError] = useState(false);
   const [name, setName] = useState('Maria Santos');
@@ -65,12 +80,31 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
   const [claimCompleted, setClaimCompleted] = useState(false);
   const [readNotifications, setReadNotifications] = useState<string[]>([]);
   const applyBeneficiary = (beneficiary: Beneficiary) => {
+    setBeneficiary(beneficiary);
     setPhone(beneficiary.contactNumber.replace(/^\+63/, ''));
     setName(
       [beneficiary.firstName, beneficiary.middleName, beneficiary.lastName]
         .filter(Boolean)
         .join(' '),
     );
+  };
+  const loadOverview = async (token: string) => {
+    setOverviewLoading(true);
+    setOverviewError(false);
+    try {
+      setOverview(await getBeneficiaryOverview(token));
+    } catch (error) {
+      if (error instanceof ApiRequestError && error.status === 401) {
+        await clearStoredToken();
+        setAccessToken('');
+        setBeneficiary(null);
+        setOverview(null);
+      } else {
+        setOverviewError(true);
+      }
+    } finally {
+      setOverviewLoading(false);
+    }
   };
   const restoreSession = async () => {
     setAuthLoading(true);
@@ -79,15 +113,20 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
       const token = await getStoredToken();
       if (!token) {
         setAccessToken('');
+        setBeneficiary(null);
+        setOverview(null);
         return;
       }
       const beneficiary = await getCurrentBeneficiary(token);
       setAccessToken(token);
       applyBeneficiary(beneficiary);
+      await loadOverview(token);
     } catch (error) {
       if (error instanceof ApiRequestError && error.status === 401) {
         await clearStoredToken();
         setAccessToken('');
+        setBeneficiary(null);
+        setOverview(null);
       } else {
         setAuthError(true);
       }
@@ -102,10 +141,14 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
     await storeToken(token);
     setAccessToken(token);
     applyBeneficiary(beneficiary);
+    await loadOverview(token);
   };
   const reset = async () => {
     setPhone('');
     setAccessToken('');
+    setBeneficiary(null);
+    setOverview(null);
+    setOverviewError(false);
     setName('Maria Santos');
     setRegistrationState(emptyRegistration);
     setFaceEnrolled(false);
@@ -122,6 +165,11 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
         phone,
         setPhone,
         accessToken,
+        beneficiary,
+        overview,
+        overviewLoading,
+        overviewError,
+        refreshOverview: () => loadOverview(accessToken),
         authLoading,
         authError,
         startSession,

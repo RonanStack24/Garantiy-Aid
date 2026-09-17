@@ -65,6 +65,43 @@ export type Beneficiary = {
   status: string;
 };
 
+export type ProgramEnrollment = {
+  id: string;
+  enrollmentDate: string;
+  status: string;
+  program: {
+    id: string;
+    code: string;
+    name: string;
+    type: string;
+    description: string | null;
+    grantAmount: number;
+  };
+};
+
+export type ClaimingSchedule = {
+  id: string;
+  distributionId: string;
+  title: string;
+  date: string;
+  slotStart: string;
+  slotEnd: string;
+  queueNumber: number;
+  location: string;
+  status: string;
+  program: {
+    id: string;
+    code: string;
+    name: string;
+    grantAmount: number;
+  };
+};
+
+export type BeneficiaryOverview = {
+  enrollments: ProgramEnrollment[];
+  nextSchedule: ClaimingSchedule | null;
+};
+
 type OtpResponse = { data: { expiresInSeconds?: number; developmentOtp?: string } };
 
 export async function getBarangays() {
@@ -127,6 +164,14 @@ export async function logout(accessToken: string) {
 export async function getCurrentBeneficiary(accessToken: string) {
   return (
     await request<{ data: Beneficiary }>('/beneficiaries/me', {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    })
+  ).data;
+}
+
+export async function getBeneficiaryOverview(accessToken: string) {
+  return (
+    await request<{ data: BeneficiaryOverview }>('/beneficiaries/me/overview', {
       headers: { Authorization: `Bearer ${accessToken}` },
     })
   ).data;

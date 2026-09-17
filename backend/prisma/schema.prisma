@@ -42,9 +42,75 @@ model Beneficiary {
   barangay      Barangay       @relation(fields: [barangayId], references: [barangayId])
   otpChallenges OtpChallenge[]
   authSessions  AuthSession[]
+  enrollments   Enrollment[]
+  schedules     Schedule[]
 
   @@index([barangayId])
   @@map("beneficiaries")
+}
+
+model Program {
+  programId   String         @id @default(uuid()) @map("program_id") @db.Uuid
+  programName String         @map("program_name") @db.VarChar(160)
+  programCode String         @unique @map("program_code") @db.VarChar(32)
+  programType String         @map("program_type") @db.VarChar(80)
+  description String?        @db.Text
+  grantAmount Decimal        @map("grant_amount") @db.Decimal(12, 2)
+  isActive    Boolean        @default(true) @map("is_active")
+  createdAt   DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  enrollments Enrollment[]
+  distributions Distribution[]
+
+  @@map("programs")
+}
+
+model Enrollment {
+  enrollmentId   String      @id @default(uuid()) @map("enrollment_id") @db.Uuid
+  beneficiaryId  String      @map("beneficiary_id") @db.Uuid
+  programId      String      @map("program_id") @db.Uuid
+  enrollmentDate DateTime    @default(now()) @map("enrollment_date") @db.Date
+  status         String      @default("pending") @db.VarChar(32)
+  createdAt      DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
+  beneficiary    Beneficiary @relation(fields: [beneficiaryId], references: [beneficiaryId], onDelete: Cascade)
+  program        Program     @relation(fields: [programId], references: [programId])
+
+  @@unique([beneficiaryId, programId])
+  @@index([programId, status])
+  @@map("enrollments")
+}
+
+model Distribution {
+  distributionId   String     @id @default(uuid()) @map("distribution_id") @db.Uuid
+  programId         String     @map("program_id") @db.Uuid
+  title             String     @db.VarChar(160)
+  distributionDate  DateTime   @map("distribution_date") @db.Date
+  location          String     @db.VarChar(255)
+  status            String     @default("scheduled") @db.VarChar(32)
+  createdAt         DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
+  program           Program    @relation(fields: [programId], references: [programId])
+  schedules         Schedule[]
+
+  @@unique([programId, distributionDate, location])
+  @@index([distributionDate, status])
+  @@map("distributions")
+}
+
+model Schedule {
+  scheduleId     String       @id @default(uuid()) @map("schedule_id") @db.Uuid
+  distributionId String       @map("distribution_id") @db.Uuid
+  beneficiaryId  String       @map("beneficiary_id") @db.Uuid
+  slotStart       DateTime     @map("slot_start") @db.Timestamptz(6)
+  slotEnd         DateTime     @map("slot_end") @db.Timestamptz(6)
+  queueNumber     Int          @map("queue_number")
+  status          String       @default("scheduled") @db.VarChar(32)
+  createdAt       DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  distribution    Distribution @relation(fields: [distributionId], references: [distributionId], onDelete: Cascade)
+  beneficiary     Beneficiary  @relation(fields: [beneficiaryId], references: [beneficiaryId], onDelete: Cascade)
+
+  @@unique([distributionId, beneficiaryId])
+  @@unique([distributionId, queueNumber])
+  @@index([beneficiaryId, slotStart])
+  @@map("schedules")
 }
 
 model OtpChallenge {
